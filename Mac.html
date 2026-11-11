@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Galaxy Live am Mac</title>
+<style>
+  body { margin:0; background:#111; color:#eee; font-family:sans-serif; text-align:center; }
+  video { width:100%; max-height:85vh; background:#000; }
+  button { font-size:18px; padding:12px 20px; margin:10px; border:0; border-radius:10px; background:#2a7; color:#fff; }
+  #status { padding:10px; }
+</style>
+</head>
+<body>
+<video id="remote" autoplay playsinline controls></video>
+<div id="status">Nicht verbunden</div>
+<button id="connect">Mit Galaxy verbinden</button>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+const ROOM = "meinplan-7342"; // Muss in phone.html identisch sein!
+const $ = id => document.getElementById(id);
+
+$("connect").onclick = () => {
+  $("connect").disabled = true;
+  const peer = new Peer(); // zufällige eigene ID
+  peer.on("open", () => {
+    $("status").textContent = "Suche Galaxy …";
+    const conn = peer.connect(ROOM + "-phone");
+    conn.on("error", () => $("status").textContent = "Galaxy nicht gefunden – ist phone.html offen?");
+  });
+  peer.on("call", call => {
+    call.answer(); // nur empfangen
+    call.on("stream", s => {
+      $("remote").srcObject = s;
+      $("status").textContent = "Live";
+    });
+  });
+  peer.on("error", e => {
+    $("status").textContent = "Fehler: " + e.type;
+    $("connect").disabled = false;
+  });
+};
+</script>
+</body>
+</html>
